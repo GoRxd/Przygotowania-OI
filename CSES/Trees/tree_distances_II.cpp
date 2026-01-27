@@ -4,45 +4,57 @@ using namespace std;
 
 using ll = long long;
 
+vector<vector<int>> adj (200001);
+vector<ll> subtree (200001, 0);
+vector<ll> ans (200001, 0);
+
+void dfs(int currNode, int parentNode, int depth)
+{
+    ans[1] += depth;
+    subtree[currNode] = 1;
+    for(auto& a: adj[currNode])
+    {
+        if (a != parentNode)
+        {
+            dfs(a, currNode, depth + 1);
+            subtree[currNode] += subtree[a];
+        }
+    }
+}
+
+void dfs_dp(int currNode, int parent, int n)
+{
+    for(auto& a : adj[currNode])
+    {
+        if (a != parent)
+        {
+            ans[a] = ans[currNode] - subtree[a] + (n - subtree[a]);
+            dfs_dp(a, currNode, n);
+        }
+    }
+}
+
 int main()
 {
-    queue<tuple<ll, ll, ll, ll>> q;
-
     int n;
+
     cin >> n;
 
-    vector<vector<int>> adj (n + 1);
-    vector<ll> sums (n + 1, 0);
 
     for(int i = 1; i <= n - 1; i++)
     {
         int a, b;
         cin >> a >> b;
-
         adj[a].push_back(b);
         adj[b].push_back(a);
-        q.push({0, i, i, i}); //sum, currentNode, prevNode, originalNode
     }
 
-    q.push({0, n, n, n});
+    dfs(1, 0, 0);
 
-    while(!q.empty())
-    {
-        auto [sum, currentNode, previousNode, originalNode] = q.front();
-        q.pop();
-
-        for(auto& a: adj[currentNode])
-        {
-            if (a != previousNode)
-            {
-                sums[originalNode] += sum + 1;
-                q.push({sum + 1, a, currentNode, originalNode});
-            }
-        }
-    }
+    dfs_dp(1, 0, n);
 
     for(int i = 1; i <= n; i++)
     {
-        cout << sums[i] << " ";
+        cout << ans[i] << " ";
     }
 }
